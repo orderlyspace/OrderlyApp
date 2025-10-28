@@ -1,7 +1,8 @@
-// Import Firebase SDKs
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+// ===== Import Firebase =====
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// ===== Your Firebase Config =====
 const firebaseConfig = {
   apiKey: "AIzaSyBioov0N0XC9oc6nP0gSr-fVZPqABUA7vw",
   authDomain: "orderlylive-616b2.firebaseapp.com",
@@ -12,39 +13,34 @@ const firebaseConfig = {
   measurementId: "G-1QWMJD3GPB"
 };
 
+// ===== Initialize Firebase =====
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Fetch menu items
+// ===== Load Menu Function =====
 async function loadMenu() {
-  const menuDiv = document.getElementById("menu");
-  const querySnapshot = await getDocs(collection(db, "menu"));
-  menuDiv.innerHTML = "";
-  querySnapshot.forEach((doc) => {
-    const item = doc.data();
-    menuDiv.innerHTML += `
-      <div class="menu-item">
-        <h3>${item.name}</h3>
-        <p>₹${item.price}</p>
-        <input type="number" id="qty-${doc.id}" placeholder="Qty" min="1" />
-      </div>
-    `;
-  });
+  try {
+    const menuRef = collection(db, "restaurants/urbanEatery/menu");
+    const querySnapshot = await getDocs(menuRef);
+    const menuContainer = document.getElementById("menuList");
+
+    menuContainer.innerHTML = ""; // clear old menu
+
+    querySnapshot.forEach((doc) => {
+      const item = doc.data();
+      const div = document.createElement("div");
+      div.style.marginBottom = "10px";
+      div.style.padding = "8px";
+      div.style.borderBottom = "1px solid #ddd";
+      div.innerHTML = `
+        <strong>${item.name}</strong> - ₹${item.price}
+      `;
+      menuContainer.appendChild(div);
+    });
+  } catch (error) {
+    console.error("Error loading menu:", error);
+  }
 }
 
-// Place order
-document.getElementById("placeOrderBtn").addEventListener("click", async () => {
-  const querySnapshot = await getDocs(collection(db, "menu"));
-  const orders = [];
-  querySnapshot.forEach((doc) => {
-    const qty = document.getElementById(`qty-${doc.id}`).value;
-    if (qty > 0) {
-      orders.push({ name: doc.data().name, qty, price: doc.data().price });
-    }
-  });
-  if (orders.length === 0) return alert("Please select at least one item!");
-  await addDoc(collection(db, "orders"), { orders, time: new Date() });
-  document.getElementById("statusMsg").innerText = "✅ Order placed successfully!";
-});
-
-loadMenu();
+// ===== Run on Page Load =====
+window.addEventListener("load", loadMenu);
