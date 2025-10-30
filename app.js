@@ -1,8 +1,6 @@
-// ===== Import Firebase =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ===== Your Firebase Config =====
 const firebaseConfig = {
   apiKey: "AIzaSyBioov0N0XC9oc6nP0gSr-fVZPqABUA7vw",
   authDomain: "orderlylive-616b2.firebaseapp.com",
@@ -13,34 +11,38 @@ const firebaseConfig = {
   measurementId: "G-1QWMJD3GPB"
 };
 
-// ===== Initialize Firebase =====
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ===== Load Menu Function =====
+const restaurantId = "urbanEatery"; // must match Firestore document name
+
 async function loadMenu() {
+  const menuDiv = document.getElementById("menu");
+  menuDiv.innerHTML = "<p>Loading menu...</p>";
+
   try {
-    const menuRef = collection(db, "restaurants/urbanEatery/menu");
-    const querySnapshot = await getDocs(menuRef);
-    const menuContainer = document.getElementById("menuList");
-
-    menuContainer.innerHTML = ""; // clear old menu
-
-    querySnapshot.forEach((doc) => {
+    const menuRef = collection(db, `restaurants/${restaurantId}/menu`);
+    const snapshot = await getDocs(menuRef);
+    
+    menuDiv.innerHTML = "";
+    snapshot.forEach((doc) => {
       const item = doc.data();
-      const div = document.createElement("div");
-      div.style.marginBottom = "10px";
-      div.style.padding = "8px";
-      div.style.borderBottom = "1px solid #ddd";
-      div.innerHTML = `
-        <strong>${item.name}</strong> - ₹${item.price}
+      const itemDiv = document.createElement("div");
+      itemDiv.classList.add("menu-item");
+      itemDiv.innerHTML = `
+        <h3>${item.name}</h3>
+        <p>₹${item.price}</p>
       `;
-      menuContainer.appendChild(div);
+      menuDiv.appendChild(itemDiv);
     });
-  } catch (error) {
-    console.error("Error loading menu:", error);
+
+    if (snapshot.empty) {
+      menuDiv.innerHTML = "<p>No menu items found.</p>";
+    }
+  } catch (err) {
+    console.error(err);
+    menuDiv.innerHTML = "<p>Error loading menu.</p>";
   }
 }
 
-// ===== Run on Page Load =====
-window.addEventListener("load", loadMenu);
+loadMenu();
