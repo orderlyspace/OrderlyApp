@@ -73,3 +73,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+// Firestore setup
+const db = firebase.firestore();
+
+document.addEventListener("DOMContentLoaded", () => {
+  const orderButton = document.querySelector("button");
+
+  orderButton.addEventListener("click", async () => {
+    try {
+      const orderData = {
+        restaurant: "urbanEatery",
+        tableID: "T1",
+        items: [{ name: "Burger", price: 120 }],
+        total: 120,
+        timestamp: new Date(),
+      };
+
+      await db.collection("orders").add(orderData);
+      alert("✅ Order placed successfully!");
+    } catch (error) {
+      console.error("Error placing order:", error);
+      alert("❌ Failed to place order");
+    }
+  });
+});
