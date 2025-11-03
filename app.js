@@ -1,6 +1,10 @@
+// Import required Firebase modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { 
+  getFirestore, collection, getDocs, addDoc, serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// Your Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyBioov0N0XC9oc6nP0gSr-fVZPqABUA7vw",
   authDomain: "orderlylive-616b2.firebaseapp.com",
@@ -11,11 +15,13 @@ const firebaseConfig = {
   measurementId: "G-1QWMJD3GPB"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const restaurantId = "urbanEatery"; // must match Firestore document name
+const restaurantId = "urbanEatery"; // Must match your Firestore doc name
 
+// ---------- LOAD MENU ----------
 async function loadMenu() {
   const menuDiv = document.getElementById("menu");
   menuDiv.innerHTML = "<p>Loading menu...</p>";
@@ -23,8 +29,13 @@ async function loadMenu() {
   try {
     const menuRef = collection(db, `restaurants/${restaurantId}/menu`);
     const snapshot = await getDocs(menuRef);
-    
+
     menuDiv.innerHTML = "";
+    if (snapshot.empty) {
+      menuDiv.innerHTML = "<p>No menu items found.</p>";
+      return;
+    }
+
     snapshot.forEach((doc) => {
       const item = doc.data();
       const itemDiv = document.createElement("div");
@@ -36,31 +47,22 @@ async function loadMenu() {
       menuDiv.appendChild(itemDiv);
     });
 
-    if (snapshot.empty) {
-      menuDiv.innerHTML = "<p>No menu items found.</p>";
-    }
   } catch (err) {
-    console.error(err);
+    console.error("Error loading menu:", err);
     menuDiv.innerHTML = "<p>Error loading menu.</p>";
   }
 }
 
-loadMenu();
-
-import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
-const db = getFirestore(app);
-
+// ---------- PLACE ORDER ----------
 document.addEventListener("DOMContentLoaded", () => {
   const orderButton = document.querySelector("button");
-  const menuItems = document.querySelectorAll(".menu-item"); // adjust if your HTML differs
 
   orderButton.addEventListener("click", async () => {
     try {
-      // Collect selected items — for now, hardcoded since only 1 item (you’ll expand later)
       const orderData = {
-        restaurant: "urbanEatery",
+        restaurant: restaurantId,
         tableID: "T1",
-        items: [{ name: "Burger", price: 120 }],
+        items: [{ name: "Burger", price: 120 }], // you can update later to dynamic
         total: 120,
         timestamp: serverTimestamp(),
       };
@@ -72,29 +74,6 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("❌ Failed to place order");
     }
   });
-});
 
-// Firestore setup
-const db = firebase.firestore();
-
-document.addEventListener("DOMContentLoaded", () => {
-  const orderButton = document.querySelector("button");
-
-  orderButton.addEventListener("click", async () => {
-    try {
-      const orderData = {
-        restaurant: "urbanEatery",
-        tableID: "T1",
-        items: [{ name: "Burger", price: 120 }],
-        total: 120,
-        timestamp: new Date(),
-      };
-
-      await db.collection("orders").add(orderData);
-      alert("✅ Order placed successfully!");
-    } catch (error) {
-      console.error("Error placing order:", error);
-      alert("❌ Failed to place order");
-    }
-  });
+  loadMenu();
 });
