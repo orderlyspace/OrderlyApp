@@ -46,3 +46,30 @@ async function loadMenu() {
 }
 
 loadMenu();
+
+import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
+const db = getFirestore(app);
+
+document.addEventListener("DOMContentLoaded", () => {
+  const orderButton = document.querySelector("button");
+  const menuItems = document.querySelectorAll(".menu-item"); // adjust if your HTML differs
+
+  orderButton.addEventListener("click", async () => {
+    try {
+      // Collect selected items — for now, hardcoded since only 1 item (you’ll expand later)
+      const orderData = {
+        restaurant: "urbanEatery",
+        tableID: "T1",
+        items: [{ name: "Burger", price: 120 }],
+        total: 120,
+        timestamp: serverTimestamp(),
+      };
+
+      await addDoc(collection(db, "orders"), orderData);
+      alert("✅ Order placed successfully!");
+    } catch (e) {
+      console.error("Error adding document: ", e);
+      alert("❌ Failed to place order");
+    }
+  });
+});
